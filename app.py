@@ -83,7 +83,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# RAG visual image
 st.markdown("""
     <div class="rag-image">
         <img src="https://media.geeksforgeeks.org/wp-content/uploads/20250210190608027719/How-Rag-works.webp" alt="RAG Diagram" />
@@ -94,7 +93,7 @@ st.markdown("---")
 
 # ───────────── Input Source ─────────────
 st.markdown("### 📥 Select Input Source")
-input_type = st.radio("", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"], horizontal=True, key="input_radio")
+input_type = st.radio("Select one", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"], horizontal=True, key="input_radio", label_visibility="collapsed")
 
 document_text = ""
 
@@ -110,14 +109,14 @@ if input_type == "📄 Upload PDF":
             st.error(str(e))
 
 elif input_type == "📝 Paste Text":
-    document_text = st.text_area("Paste your text below:")
+    document_text = st.text_area("Paste your text below:", label_visibility="visible")
     if document_text.strip():
         st.success("✅ Text captured.")
         with st.expander("📜 Input Text"):
             st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
 
 elif input_type == "🎥 YouTube URL or ID":
-    video_input = st.text_input("Enter YouTube video URL or ID:")
+    video_input = st.text_input("Enter YouTube video URL or ID:", label_visibility="visible")
     if video_input:
         try:
             document_text = fetch_youtube_transcript(video_input)
@@ -151,9 +150,9 @@ if document_text.strip():
     st.divider()
     st.subheader("💬 Ask a Question")
 
-    query = st.text_input("Type your question here:")
+    query = st.text_input("Type your question here:", label_visibility="visible")
     if query.strip():
-        with st.spinner("🔍 Retrieving context..."):
+        with st.spinner("🔍 Retrieving relevant content..."):
             context_chunks = query_vector_db(query)
 
             with st.expander("📂 Top Matching Chunks Used"):
@@ -167,8 +166,8 @@ if document_text.strip():
         st.markdown("### 💬 Answer:")
         st.write(response)
 
-        if st.button("🧹 Clear Vector DB"):
-            delete_vector_db()
+    if st.button("🧹 Clear Vector DB"):
+        delete_vector_db()
 
 # ───────────── Footer ─────────────
 st.markdown("---")
