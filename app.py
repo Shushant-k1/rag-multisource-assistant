@@ -2,7 +2,7 @@ import streamlit as st
 from transcript_utils import fetch_youtube_transcript
 from pdf_utils import extract_text_from_pdf
 from vector_db import store_in_vector_db, query_vector_db
-from rag_pipeline import generate_answer
+from generate_answer import generate_answer
 
 st.set_page_config(page_title="Multi-Source RAG Assistant", layout="wide")
 st.title("🔍 Multi-Source RAG Assistant")
