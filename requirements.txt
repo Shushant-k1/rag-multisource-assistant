@@ -1,5 +1,5 @@
 streamlit==1.35.0
-git+https://github.com/kyamagu/faiss-wheels.git#egg=faiss
+chromadb==0.4.22
 numpy==1.26.4
 youtube-transcript-api==0.6.1
 PyMuPDF==1.23.26
