@@ -3,13 +3,21 @@ import re
 
 def extract_video_id(url_or_id):
     match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11})", url_or_id)
-    return match.group(1) if match else url_or_id.strip()
+    if match:
+        return match.group(1)
+    elif len(url_or_id) == 11:
+        return url_or_id
+    else:
+        raise ValueError("Invalid YouTube URL or video ID.")
 
 def fetch_youtube_transcript(url_or_id):
     video_id = extract_video_id(url_or_id)
-    
+    print(f"Extracted Video ID: {video_id}")
+
     try:
+        # Fetch the transcript for the given video ID
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        
         return " ".join([entry['text'] for entry in transcript])
 
     except VideoUnavailable:
