@@ -3,6 +3,13 @@ import google.generativeai as genai
 import numpy as np
 import faiss
 
+
+from dotenv import load_dotenv
+import os
+
+# Load the .env file
+load_dotenv()
+
 # Get the API key from environment (set via GitHub Secrets or deployment env)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
