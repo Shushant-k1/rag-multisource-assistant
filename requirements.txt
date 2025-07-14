@@ -1,5 +1,5 @@
 streamlit==1.35.0
-faiss-cpu==1.7.4
+faiss-cpu==1.7.4  # ⚠️ May fail on Python 3.12+ or limited environments
 numpy==1.26.4
 youtube-transcript-api==0.6.1
 PyMuPDF==1.23.26
