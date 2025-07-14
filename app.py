@@ -54,11 +54,28 @@ elif input_type == "🎥 YouTube URL or ID":
         except ValueError as e:
             st.error(str(e))
 
+from text_splitter import text_splitter  # Your custom splitter function
+
 # Store in vector DB
 if document_text.strip():
     if st.button("📥 Store in Vector DB"):
-        store_in_vector_db(document_text)
-        st.success("📦 Content embedded and stored in vector database.")
+        try:
+            st.info("🔄 Splitting text into chunks...")
+            chunks = text_splitter(document_text)
+
+            st.success(f"✅ Split into {len(chunks)} chunks.")
+
+            with st.expander("🧩 Preview Text Chunks", expanded=False):
+                for i, chunk in enumerate(chunks[:5]):
+                    st.markdown(f"**Chunk {i+1}:**")
+                    st.write(chunk)
+
+            st.info("📦 Storing chunks in vector database...")
+            store_in_vector_db(chunks)
+            st.success("✅ Chunks embedded and stored successfully.")
+
+        except Exception as e:
+            st.error(f"❌ Failed to split/store text: {str(e)}")
 
     st.divider()
     st.subheader("💬 Ask a question about the uploaded content")
