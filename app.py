@@ -1,94 +1,164 @@
 import streamlit as st
+from streamlit.components.v1 import html
 from transcript_utils import fetch_youtube_transcript
 from pdf_utils import extract_text_from_pdf
 from vector_db import store_in_vector_db, query_vector_db
 from generate_answer import generate_answer
+from text_splitter import text_splitter
+import shutil
+import os
 
+VECTOR_DB_PATH = "./vector_db"
+
+def delete_vector_db():
+    if os.path.exists(VECTOR_DB_PATH):
+        shutil.rmtree(VECTOR_DB_PATH)
+        st.info("🧹 Vector DB cleared.")
+    else:
+        st.warning("⚠️ Vector DB not found or already deleted.")
+
+# ───────────── Page Config ─────────────
 st.set_page_config(page_title="Multi-Source RAG Assistant", layout="wide")
-st.title("🔍 Multi-Source RAG Assistant")
 
-st.markdown(
-    """
-    This app supports:
-    - 📄 PDF upload  
-    - 🎥 YouTube video transcript  
-    - 📝 Raw text input  
-    
-    The content is processed and stored in a vector DB for RAG-based Q&A.
-    """
-)
+# ───────────── Advanced CSS Styling ─────────────
+st.markdown("""
+    <style>
+        body {
+            background: linear-gradient(120deg, #f6f8fa, #eaf0f5);
+        }
 
-# Sidebar input selection
-st.sidebar.header("📥 Select Input Type")
-input_type = st.sidebar.radio("", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"])
+        .main > div {
+            max-width: 900px !important;
+            margin: auto !important;
+            padding: 2rem 3rem !important;
+        }
+
+        .title-container {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .title-container h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .title-container p {
+            font-size: 1.2rem;
+            color: #4b5563;
+        }
+
+        .rag-image {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .rag-image img {
+            width: 100%;
+            max-width: 700px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .chunk-box {
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            background-color: #f9fafb;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            visibility: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# ───────────── Title & Image ─────────────
+st.markdown("""
+    <div class="title-container">
+        <h1>🔍 Multi-Source RAG Assistant</h1>
+        <p>Upload PDFs, extract from YouTube, or paste your own text — ask anything using Gemini + FAISS</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# RAG visual image
+st.markdown("""
+    <div class="rag-image">
+        <img src="https://media.geeksforgeeks.org/wp-content/uploads/20250210190608027719/How-Rag-works.webp" alt="RAG Diagram" />
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ───────────── Input Source ─────────────
+st.markdown("### 📥 Select Input Source")
+input_type = st.radio("", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"], horizontal=True, key="input_radio")
 
 document_text = ""
 
-# Input Handling
 if input_type == "📄 Upload PDF":
-    pdf_file = st.sidebar.file_uploader("Upload your PDF", type=["pdf"])
+    pdf_file = st.file_uploader("Upload your PDF file:", type=["pdf"])
     if pdf_file:
         try:
             document_text = extract_text_from_pdf(pdf_file)
             st.success("✅ PDF processed successfully.")
-            with st.expander("📜 Extracted Text", expanded=False):
+            with st.expander("📜 Extracted Text"):
                 st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
         except ValueError as e:
             st.error(str(e))
 
 elif input_type == "📝 Paste Text":
-    document_text = st.sidebar.text_area("Paste your text below:")
+    document_text = st.text_area("Paste your text below:")
     if document_text.strip():
         st.success("✅ Text captured.")
-        with st.expander("📜 Input Text", expanded=False):
+        with st.expander("📜 Input Text"):
             st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
 
 elif input_type == "🎥 YouTube URL or ID":
-    video_input = st.sidebar.text_input("Enter YouTube video URL or ID")
+    video_input = st.text_input("Enter YouTube video URL or ID:")
     if video_input:
         try:
             document_text = fetch_youtube_transcript(video_input)
             st.success("✅ Transcript fetched successfully.")
-            with st.expander("🎬 Video Transcript", expanded=False):
+            with st.expander("🎬 Video Transcript"):
                 st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
         except ValueError as e:
             st.error(str(e))
 
-from text_splitter import text_splitter  # Your custom splitter function
-
-# Store in vector DB
+# ───────────── Store & QA Section ─────────────
 if document_text.strip():
+    st.markdown("### 📦 Store and Ask Questions")
+
     if st.button("📥 Store in Vector DB"):
         try:
             st.info("🔄 Splitting text into chunks...")
             chunks = text_splitter(document_text)
 
             st.success(f"✅ Split into {len(chunks)} chunks.")
-
-            with st.expander("🧩 Preview Text Chunks", expanded=False):
+            with st.expander("🧩 Preview Text Chunks"):
                 for i, chunk in enumerate(chunks[:5]):
-                    st.markdown(f"**Chunk {i+1}:**")
-                    st.write(chunk)
+                    st.markdown(f"<div class='chunk-box'><b>Chunk {i+1}:</b><br>{chunk}</div>", unsafe_allow_html=True)
 
-            st.info("📦 Storing chunks in vector database...")
+            st.info("📦 Storing in vector database...")
             store_in_vector_db(chunks)
-            st.success("✅ Chunks embedded and stored successfully.")
+            st.success("✅ Chunks stored successfully.")
 
         except Exception as e:
-            st.error(f"❌ Failed to split/store text: {str(e)}")
+            st.error(f"❌ Failed to store chunks: {str(e)}")
 
     st.divider()
-    st.subheader("💬 Ask a question about the uploaded content")
+    st.subheader("💬 Ask a Question")
 
-    query = st.text_input("Your Question:")
+    query = st.text_input("Type your question here:")
     if query.strip():
-        with st.spinner("🔍 Retrieving relevant content..."):
+        with st.spinner("🔍 Retrieving context..."):
             context_chunks = query_vector_db(query)
 
             with st.expander("📂 Top Matching Chunks Used"):
                 for i, chunk in enumerate(context_chunks[:3]):
-                    st.markdown(f"**Chunk {i+1}:**")
-                    st.write(chunk)
+                    st.markdown(f"<div class='chunk-box'><b>Chunk {i+1}:</b><br>{chunk}</div>", unsafe_allow_html=True)
 
         with st.spinner("🧠 Generating answer..."):
             response = generate_answer(query, context_chunks)
@@ -96,3 +166,14 @@ if document_text.strip():
         st.success("✅ Answer generated:")
         st.markdown("### 💬 Answer:")
         st.write(response)
+
+        if st.button("🧹 Clear Vector DB"):
+            delete_vector_db()
+
+# ───────────── Footer ─────────────
+st.markdown("---")
+st.markdown("""
+    <div style='text-align: center; font-size: 14px; color: gray; margin-top: 2rem;'>
+        Made with ❤️ by <b>Shushant Kumar</b> using Gemini + Streamlit + FAISS.
+    </div>
+""", unsafe_allow_html=True)
