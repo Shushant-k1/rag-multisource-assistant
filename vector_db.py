@@ -1,26 +1,23 @@
 import os
-import google.generativeai as genai
 import numpy as np
-import faiss
+import google.generativeai as genai
 
+try:
+    import faiss  # This requires Python <= 3.10 and proper setup
+except ModuleNotFoundError:
+    raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or set Python 3.10 in runtime.txt.")
 
-from dotenv import load_dotenv
-import os
-
-# Load the .env file
-load_dotenv()
-
-# Get the API key from environment (set via GitHub Secrets or deployment env)
+# ✅ Get API key from environment (works with GitHub Secrets and Streamlit Cloud)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
     raise ValueError("❌ GOOGLE_API_KEY not found in environment.")
 
-# Configure Gemini / Google Generative AI
+# Configure Gemini embedding model
 genai.configure(api_key=GOOGLE_API_KEY)
 embedding_model = "models/embedding-001"
 
-# In-memory FAISS index
+# In-memory FAISS index and storage
 index = None
 stored_text_chunks = []
 
