@@ -5,61 +5,77 @@ from vector_db import store_in_vector_db, query_vector_db
 from rag_pipeline import generate_answer
 
 st.set_page_config(page_title="Multi-Source RAG Assistant", layout="wide")
-st.title("🔎 Multi-Source RAG Assistant")
+st.title("🔍 Multi-Source RAG Assistant")
 
-st.markdown("This app lets you upload PDFs, input text, or use YouTube video transcripts to ask questions using RAG (Retrieval-Augmented Generation).")
+st.markdown(
+    """
+    This app supports:
+    - 📄 PDF upload  
+    - 🎥 YouTube video transcript  
+    - 📝 Raw text input  
+    
+    The content is processed and stored in a vector DB for RAG-based Q&A.
+    """
+)
 
-# Sidebar for input selection
-st.sidebar.header("📥 Input Options")
-input_type = st.sidebar.radio("Select Input Type:", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"])
+# Sidebar input selection
+st.sidebar.header("📥 Select Input Type")
+input_type = st.sidebar.radio("", ["📄 Upload PDF", "📝 Paste Text", "🎥 YouTube URL or ID"])
 
 document_text = ""
 
-# Input method logic
+# Input Handling
 if input_type == "📄 Upload PDF":
-    pdf_file = st.sidebar.file_uploader("Upload a PDF file", type=["pdf"])
+    pdf_file = st.sidebar.file_uploader("Upload your PDF", type=["pdf"])
     if pdf_file:
-        document_text = extract_text_from_pdf(pdf_file)
-        with st.expander("📜 Extracted Text from PDF", expanded=False):
-            st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
+        try:
+            document_text = extract_text_from_pdf(pdf_file)
+            st.success("✅ PDF processed successfully.")
+            with st.expander("📜 Extracted Text", expanded=False):
+                st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
+        except ValueError as e:
+            st.error(str(e))
 
 elif input_type == "📝 Paste Text":
-    document_text = st.sidebar.text_area("Paste your text here:")
-    if document_text:
-        with st.expander("📜 Pasted Text", expanded=False):
+    document_text = st.sidebar.text_area("Paste your text below:")
+    if document_text.strip():
+        st.success("✅ Text captured.")
+        with st.expander("📜 Input Text", expanded=False):
             st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
 
 elif input_type == "🎥 YouTube URL or ID":
-    video_input = st.sidebar.text_input("Enter YouTube URL or Video ID")
+    video_input = st.sidebar.text_input("Enter YouTube video URL or ID")
     if video_input:
         try:
             document_text = fetch_youtube_transcript(video_input)
-            with st.expander("🎬 Transcript from YouTube", expanded=False):
+            st.success("✅ Transcript fetched successfully.")
+            with st.expander("🎬 Video Transcript", expanded=False):
                 st.write(document_text[:2000] + "..." if len(document_text) > 2000 else document_text)
-        except Exception as e:
-            st.error(f"Error: {e}")
+        except ValueError as e:
+            st.error(str(e))
 
-# Process and store
-if document_text:
-    if st.button("✅ Store in Vector Database"):
+# Store in vector DB
+if document_text.strip():
+    if st.button("📥 Store in Vector DB"):
         store_in_vector_db(document_text)
-        st.success("Document content embedded and stored in vector DB.")
+        st.success("📦 Content embedded and stored in vector database.")
 
     st.divider()
+    st.subheader("💬 Ask a question about the uploaded content")
 
-    st.subheader("💬 Ask a question based on the uploaded content:")
     query = st.text_input("Your Question:")
-
-    if query:
-        with st.spinner("Retrieving relevant chunks..."):
+    if query.strip():
+        with st.spinner("🔍 Retrieving relevant content..."):
             context_chunks = query_vector_db(query)
-            with st.expander("📂 Top Retrieved Chunks"):
-                for i, chunk in enumerate(context_chunks[:3]):
-                    st.markdown(f"**Chunk {i+1}:** {chunk}")
 
-        with st.spinner("Generating answer..."):
+            with st.expander("📂 Top Matching Chunks Used"):
+                for i, chunk in enumerate(context_chunks[:3]):
+                    st.markdown(f"**Chunk {i+1}:**")
+                    st.write(chunk)
+
+        with st.spinner("🧠 Generating answer..."):
             response = generate_answer(query, context_chunks)
 
-        st.success("Answer generated:")
-        st.write("### 🧠 Answer:")
-        st.markdown(response)
+        st.success("✅ Answer generated:")
+        st.markdown("### 💬 Answer:")
+        st.write(response)
