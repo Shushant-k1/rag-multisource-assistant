@@ -10,25 +10,12 @@ except ModuleNotFoundError:
 
 import os
 
-# Streamlit-specific import (only if running in Streamlit)
-try:
-    import streamlit as st
-    STREAMLIT = True
-except ImportError:
-    STREAMLIT = False
-
 # ✅ Load Google API Key from Streamlit secrets or env vars
 def get_google_api_key():
-    if STREAMLIT:
-        try:
-            return st.secrets["GOOGLE_API_KEY"]
-        except KeyError:
-            raise ValueError("❌ GOOGLE_API_KEY not found in Streamlit secrets.")
-    else:
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("❌ GOOGLE_API_KEY not found in environment variables.")
-        return api_key
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("❌ GOOGLE_API_KEY not found in environment variables.")
+    return api_key
 
 GOOGLE_API_KEY = get_google_api_key()
 
