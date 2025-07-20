@@ -1,13 +1,21 @@
 import os
+import dotenv
 import numpy as np
 import google.generativeai as genai
+
+
+import os
+from dotenv import load_dotenv  # ✅ Load from .env file
+
+# ✅ Load environment variables from .env
+load_dotenv()
 
 try:
     import faiss  # This requires Python <= 3.10 and proper setup
 except ModuleNotFoundError:
     raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or set Python 3.10 in runtime.txt.")
 
-# ✅ Get API key from environment (works with GitHub Secrets and Streamlit Cloud)
+# ✅ Get API key from environment (works with .env, GitHub Secrets, and Streamlit Cloud)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
