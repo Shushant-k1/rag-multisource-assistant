@@ -3,23 +3,34 @@ import dotenv
 import numpy as np
 import google.generativeai as genai
 
+try:
+    import faiss  # Works only with Python <= 3.10 and proper installation
+except ModuleNotFoundError:
+    raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or downgrade to Python 3.10.")
 
 import os
-from dotenv import load_dotenv  # ✅ Load from .env file
 
-# ✅ Load environment variables from .env
-load_dotenv()
-
+# Streamlit-specific import (only if running in Streamlit)
 try:
-    import faiss  # This requires Python <= 3.10 and proper setup
-except ModuleNotFoundError:
-    raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or set Python 3.10 in runtime.txt.")
+    import streamlit as st
+    STREAMLIT = True
+except ImportError:
+    STREAMLIT = False
 
-# ✅ Get API key from environment (works with .env, GitHub Secrets, and Streamlit Cloud)
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# ✅ Load Google API Key from Streamlit secrets or env vars
+def get_google_api_key():
+    if STREAMLIT:
+        try:
+            return st.secrets["GOOGLE_API_KEY"]
+        except KeyError:
+            raise ValueError("❌ GOOGLE_API_KEY not found in Streamlit secrets.")
+    else:
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("❌ GOOGLE_API_KEY not found in environment variables.")
+        return api_key
 
-if not GOOGLE_API_KEY:
-    raise ValueError("❌ GOOGLE_API_KEY not found in environment.")
+GOOGLE_API_KEY = get_google_api_key()
 
 # Configure Gemini embedding model
 genai.configure(api_key=GOOGLE_API_KEY)
