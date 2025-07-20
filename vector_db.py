@@ -18,10 +18,6 @@ if not GOOGLE_API_KEY:
 # ✅ Configure Gemini (Google Generative AI) SDK
 genai.configure(api_key=GOOGLE_API_KEY)
 
-GOOGLE_API_KEY = get_google_api_key()
-
-# Configure Gemini embedding model
-genai.configure(api_key=GOOGLE_API_KEY)
 embedding_model = "models/gemini-embedding-exp-03-07"
 
 # In-memory FAISS index and storage
