@@ -1,21 +1,22 @@
+
 import os
-import dotenv
 import numpy as np
 import google.generativeai as genai
 
+# Try importing FAISS, raise clear error if unavailable
 try:
-    import faiss  # Works only with Python <= 3.10 and proper installation
+    import faiss  # Requires Python <= 3.10
 except ModuleNotFoundError:
-    raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or downgrade to Python 3.10.")
+    raise ImportError("❌ FAISS is not installed. Use `chromadb` instead or set Python version to 3.10.")
 
-import os
+# ✅ Load Google API key from environment variable (set via Streamlit/GCP secrets)
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# ✅ Load Google API Key from Streamlit secrets or env vars
-def get_google_api_key():
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("❌ GOOGLE_API_KEY not found in environment variables.")
-    return api_key
+if not GOOGLE_API_KEY:
+    raise ValueError("❌ GOOGLE_API_KEY not found in environment variables. Set it in Streamlit secrets or GCP Runtime Environment.")
+
+# ✅ Configure Gemini (Google Generative AI) SDK
+genai.configure(api_key=GOOGLE_API_KEY)
 
 GOOGLE_API_KEY = get_google_api_key()
 
