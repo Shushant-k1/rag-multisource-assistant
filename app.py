@@ -7,7 +7,7 @@ from generate_answer import generate_answer
 from text_splitter import text_splitter
 import shutil
 import os
-
+#
 VECTOR_DB_PATH = "./vector_db"
 
 def delete_vector_db():
