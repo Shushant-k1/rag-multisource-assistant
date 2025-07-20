@@ -23,7 +23,7 @@ if not GOOGLE_API_KEY:
 
 # Configure Gemini embedding model
 genai.configure(api_key=GOOGLE_API_KEY)
-embedding_model = "models/embedding-001"
+embedding_model = "models/gemini-embedding-exp-03-07"
 
 # In-memory FAISS index and storage
 index = None
@@ -41,6 +41,7 @@ def store_in_vector_db(text_chunks):
             response = genai.embed_content(
                 model=embedding_model,
                 content=chunk,
+                
                 task_type="retrieval_document"
             )
             embeddings.append(response["embedding"])
