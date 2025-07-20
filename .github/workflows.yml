@@ -1,0 +1,49 @@
+name: Deploy to Cloud Run (No GCS Bucket)
+
+on:
+  push:
+    branches:
+      - main  
+
+env:
+  PROJECT_ID: pioneering-axe-464317-f1
+  REGION: europe-west1
+  SERVICE_NAME: rag-multisource-assistant1
+  REPO_NAME: rag-multisource-assistant
+  IMAGE_NAME: rag-multisource-assistant1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'  # Set this secret in GitHub
+
+    - name: Set up gcloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker to use Artifact Registry
+      run: gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+    - name: Build Docker image
+      run: |
+        docker build -t europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:$GITHUB_SHA .
+
+    - name: Push Docker image
+      run: |
+        docker push europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:$GITHUB_SHA
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }} \
+          --image=europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:$GITHUB_SHA \
+          --region=${{ env.REGION }} \
+          --platform=managed \
+          --allow-unauthenticated \
+          --min-instances=1
