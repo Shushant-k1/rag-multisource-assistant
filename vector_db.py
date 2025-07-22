@@ -54,7 +54,7 @@ def store_in_vector_db(text_chunks):
 
     index.add(embedding_matrix)
     stored_text_chunks.extend(text_chunks)
-
+    print(stored_text_chunks[0])
     print(f"✅ Stored {len(embeddings)} vectors in FAISS.")
 
 def query_vector_db(query, k=3):
